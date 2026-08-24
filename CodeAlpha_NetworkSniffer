@@ -1,0 +1,78 @@
+# CodeAlpha Network Sniffer
+
+## 🎯 Objective
+
+A Python-based network packet sniffer built as part of the CodeAlpha Cyber Security Internship (Task 1). This tool captures live network traffic and displays key packet details — source/destination IPs, ports, and protocol type — to demonstrate an understanding of how data flows through a network at the packet level.
+
+## 🧰 Tech Stack
+
+- **Language:** Python 3
+- **Library:** [Scapy](https://scapy.net/) — for packet capture and analysis
+- **Environment:** Kali Linux (VirtualBox VM)
+
+## 🔍 How It Works
+
+The script uses Scapy's `sniff()` function to capture live packets on the network interface. For each captured packet, it:
+
+1. Checks if the packet has an IP layer
+2. Extracts the source and destination IP addresses
+3. Identifies the transport-layer protocol (TCP or UDP)
+4. Extracts and displays the relevant source/destination ports
+5. Prints a clean, readable summary line for each packet
+
+```python
+from scapy.all import sniff, IP, TCP, UDP
+
+def analyze_packet(packet):
+    if IP in packet:
+        src_ip = packet[IP].src
+        dst_ip = packet[IP].dst
+        proto = packet[IP].proto
+
+        if TCP in packet:
+            src_port = packet[TCP].sport
+            dst_port = packet[TCP].dport
+            print(f"[TCP] {src_ip}:{src_port} -> {dst_ip}:{dst_port}")
+        elif UDP in packet:
+            src_port = packet[UDP].sport
+            dst_port = packet[UDP].dport
+            print(f"[UDP] {src_ip}:{src_port} -> {dst_ip}:{dst_port}")
+        else:
+            print(f"[OTHER] {src_ip} -> {dst_ip} (Protocol: {proto})")
+
+print("Starting network sniffer... Press Ctrl+C to stop.\n")
+sniff(prn=analyze_packet, filter="ip", store=False, count=20)
+```
+
+## ▶️ How to Run
+
+```bash
+sudo python3 sniffer.py
+```
+
+> Root/sudo privileges are required because raw packet capture needs elevated access to the network interface.
+
+## 📸 Test Run
+
+The script was tested by running it while browsing to `google.com` in Firefox, confirming that live TCP packets (including the HTTPS connection to Google's servers) were correctly captured and displayed with accurate source/destination IPs and ports.
+
+![Sniffer capturing live traffic](sniffer-output.png)
+
+## 🧠 Key Concepts Applied
+
+- **Packet structure:** every IP packet has a source and destination address, and (for TCP/UDP) source and destination ports identifying the specific service/connection
+- **Protocol identification:** distinguishing TCP vs UDP traffic by inspecting which layer is present in the captured packet
+- **Live capture vs static analysis:** unlike reading a saved `.pcap` file, this script processes packets in real time as they arrive on the interface
+
+This builds directly on the packet-level understanding developed in my earlier [Wireshark packet analysis writeups](../wireshark-analysis) — the same TCP/IP concepts (source/destination IP, ports, protocol) are here implemented programmatically instead of viewed through a GUI.
+
+## 🔐 Relevance to Cyber Security
+
+Understanding how to build a basic sniffer highlights exactly what a defender needs to detect at the network level:
+- Unexpected destination IPs or ports could indicate malware communicating with a command-and-control server
+- Unusual protocol usage on a given port can be a sign of tunneling or protocol misuse
+- This is the same foundational skill that underlies commercial network monitoring and intrusion detection tools
+
+## 📌 Notes
+
+This is Task 1 of the CodeAlpha Cyber Security Internship. Possible extensions for future iterations: filtering by specific protocol/port, saving captured packets to a `.pcap` file, and displaying payload data for further inspection.
